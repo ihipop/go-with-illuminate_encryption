@@ -1,4 +1,4 @@
-package illuminate_encryption
+package laravelencryption
 
 import (
 	"encoding/json"
@@ -30,7 +30,7 @@ func TestNewWithKeys(t *testing.T) {
 }
 
 func TestEncryptAndDecrypt(t *testing.T) {
-	b, e := json.Marshal(testPayload)
+	b, _ := json.Marshal(testPayload)
 	stringEncrypted, e := EncryptByte(b, testKey)
 	t.Log("encrypted string", stringEncrypted)
 	if e != nil {

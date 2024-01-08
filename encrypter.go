@@ -1,12 +1,11 @@
 //
 
-// Package illuminate_encryption implements the most subset encryption logic of illuminate\encryption  ^v8.51.0
+// Package laravelencryption implements the most subset encryption logic of illuminate\encryption  ^v8.51.0
 //
-// See also
+// # See also
 //
 // https://github.com/illuminate/encryption
-//
-package illuminate_encryption
+package laravelencryption
 
 import (
 	"crypto/hmac"
@@ -23,9 +22,9 @@ import (
 )
 
 type encrypter struct {
-	Iv    string `json:"iv"` //base64 encoded
+	Iv    string `json:"iv"` // base64 encoded
 	Mac   string `json:"mac"`
-	Value string `json:"value"` //base64 encoded
+	Value string `json:"value"` // base64 encoded
 	key   string
 }
 
@@ -38,7 +37,7 @@ func (t *encrypter) UnmarshalJSON(data []byte) error {
 	if tt.Iv == "" || tt.Value == "" || tt.Mac == "" {
 		return errors.New("ticket value is not correct")
 	}
-	//validMac
+	// validMac
 	castT := encrypter(tt)
 	castT.key = t.key
 	e := castT.validMac()
@@ -58,7 +57,7 @@ func (t *encrypter) MarshalJSON() ([]byte, error) {
 }
 
 func (t encrypter) validMac() error {
-	//validMac
+	// validMac
 	data := t.Iv + t.Value
 	check := validMac(data, t.Mac, t.key)
 	if !check {
@@ -67,9 +66,9 @@ func (t encrypter) validMac() error {
 	return nil
 }
 
-//DecryptByte decrypt the given string without unserialization.
+// DecryptByte decrypt the given string without unserialization.
 func (t *encrypter) DecryptByte() ([]byte, error) {
-	//base64 decode iv and value
+	// base64 decode iv and value
 	ivRaw, err := base64.StdEncoding.DecodeString(t.Iv)
 	if err != nil {
 		return nil, err
@@ -78,7 +77,7 @@ func (t *encrypter) DecryptByte() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	//aes decrypt value
+	// aes decrypt value
 	dst, err := openssl.AesCBCDecrypt(valueRaw, []byte(t.key), ivRaw, openssl.PKCS7_PADDING)
 	if err != nil {
 		return nil, err
@@ -93,25 +92,33 @@ func (t *encrypter) EncryptByte(message []byte) (string, error) {
 		return "", err
 	}
 	key := t.key
-	//encrypt
+	// encrypt
 	res, err := openssl.AesCBCEncrypt(message, []byte(key), iv, openssl.PKCS7_PADDING)
 	if err != nil {
 		return "", err
 	}
-	//base64 encoding
+	// base64 encoding
 	t.Iv = base64.StdEncoding.EncodeToString(iv)
 	t.Value = base64.StdEncoding.EncodeToString(res)
-	//marshal the ticket to json byte
+	// marshal the ticket to json byte
 	resTicket, err := json.Marshal(t)
 	if err != nil {
 		return "", err
 	}
-	//encode the ticket use base64
+	// encode the ticket use base64
 	ticketR := base64.StdEncoding.EncodeToString(resTicket)
 
 	return ticketR, nil
 }
 
+// NewEncrypter creates a new encrypter instance with the given key.
+//
+// Parameters:
+// - key: A string representing the encryption key.
+//
+// Returns:
+// - *encrypter: A pointer to the encrypter instance.
+// - error: An error if the input key is not supported.
 func NewEncrypter(key string) (*encrypter, error) {
 	if Supported(key) {
 		return &encrypter{key: key}, nil
@@ -135,17 +142,17 @@ func EncryptByte(message []byte, key string) (string, error) {
 
 // DecryptString Decrypt the given string without unserialization.
 func DecryptString(value string, key string) ([]byte, error) {
-	//base64 decode
-	ticketJsonByte, err := base64.StdEncoding.DecodeString(value)
+	// base64 decode
+	ticketJSONByte, err := base64.StdEncoding.DecodeString(value)
 	if err != nil {
 		return nil, err
 	}
-	//Unmarshal json  byte
+	// Unmarshal json  byte
 	t, err := NewEncrypter(key)
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal(ticketJsonByte, &t)
+	err = json.Unmarshal(ticketJSONByte, &t)
 	if err != nil {
 		return nil, err
 	}

@@ -1,1 +1,1 @@
-package illuminate_encryption
+package laravelencryption
